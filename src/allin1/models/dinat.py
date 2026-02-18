@@ -7,7 +7,7 @@ import math
 import torch
 from abc import ABC,  abstractmethod
 from typing import Optional, Tuple, Callable
-from natten.functional import natten1dav, natten1dqkrpb, natten2dav, natten2dqkrpb
+from natten.functional import na1d_av, na1d_qk, na2d_av, na2d_qk
 from ..config import Config
 from .utils import *
 
