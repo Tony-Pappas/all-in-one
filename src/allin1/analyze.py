@@ -1,6 +1,6 @@
 import torch
 
-from typing import List, Union
+from typing import List, Union, Optional
 from tqdm import tqdm
 from .demix import demix
 from .spectrogram import extract_spectrograms
@@ -28,6 +28,7 @@ def analyze(
   include_activations: bool = False,
   include_embeddings: bool = False,
   demix_dir: PathLike = './demix',
+  pre_demixed_dir: Optional[PathLike] = None,
   spec_dir: PathLike = './spec',
   keep_byproducts: bool = False,
   overwrite: bool = False,
@@ -59,6 +60,9 @@ def analyze(
       Whether to include embeddings in the analysis results or not.
   demix_dir : PathLike, optional
       Path to the directory where the source-separated audio will be saved. Default is './demix'.
+  pre_demixed_dir : PathLike, optional
+      Directory containing pre-separated stems. If provided, skips Demucs separation.
+      Expected layout: pre_demixed_dir / 'htdemucs' / <audio_stem> / {bass,drums,other,vocals}.wav
   spec_dir : PathLike, optional
       Path to the directory where the spectrograms will be saved. Default is './spec'.
   keep_byproducts : bool, optional
@@ -114,11 +118,25 @@ def analyze(
 
   # Analyze the tracks that are not analyzed yet.
   if todo_paths:
-    # Run HTDemucs for source separation only for the tracks that are not analyzed yet.
-    demix_paths = demix(todo_paths, demix_dir, device)
+      # === NEW: support pre-demixed stems ===
+      if pre_demixed_dir is not None:
+          pre_demixed_dir = Path(pre_demixed_dir).resolve()
+          use_pre_demixed = True
+          print(f"Using pre-demixed stems from {pre_demixed_dir} (skipping Demucs separation)")
+      else:
+          use_pre_demixed = False
 
-    # Extract spectrograms for the tracks that are not analyzed yet.
-    spec_paths = extract_spectrograms(demix_paths, spec_dir, multiprocess)
+      if use_pre_demixed:
+          demix_paths = [
+              pre_demixed_dir / 'htdemucs' / Path(p).stem
+              for p in todo_paths
+          ]
+      else:
+          # Run normal separation
+          demix_paths = demix(todo_paths, demix_dir, device)
+
+      # Extract spectrograms (this step uses the demix_paths, whether pre-made or newly separated)
+      spec_paths = extract_spectrograms(demix_paths, spec_dir, multiprocess)
 
     # Load the model.
     model = load_pretrained_model(
@@ -164,16 +182,18 @@ def analyze(
     print(f'=> Sonified tracks are successfully saved to {sonify}')
 
   if not keep_byproducts:
-    for path in demix_paths:
-      for stem in ['bass', 'drums', 'other', 'vocals']:
-        (path / f'{stem}.wav').unlink(missing_ok=True)
-      rmdir_if_empty(path)
-    rmdir_if_empty(demix_dir / 'htdemucs_ft')
-    rmdir_if_empty(demix_dir)
+      if not use_pre_demixed:  # Only clean up if we created the demixed files ourselves
+          for path in demix_paths:
+              for stem in ['bass', 'drums', 'other', 'vocals']:
+                  (path / f'{stem}.wav').unlink(missing_ok=True)
+              rmdir_if_empty(path)
+          rmdir_if_empty(demix_dir / 'htdemucs_ft')  # or 'htdemucs' if that's your model name
+          rmdir_if_empty(demix_dir)
 
-    for path in spec_paths:
-      path.unlink(missing_ok=True)
-    rmdir_if_empty(spec_dir)
+      # Always clean spectrograms if not keeping byproducts
+      for path in spec_paths:
+          path.unlink(missing_ok=True)
+      rmdir_if_empty(spec_dir)
 
   if not return_list:
     return results[0]
