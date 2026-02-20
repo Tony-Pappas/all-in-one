@@ -168,7 +168,7 @@ def analyze(
       for stem in ['bass', 'drums', 'other', 'vocals']:
         (path / f'{stem}.wav').unlink(missing_ok=True)
       rmdir_if_empty(path)
-    rmdir_if_empty(demix_dir / 'htdemucs')
+    rmdir_if_empty(demix_dir / 'htdemucs_ft')
     rmdir_if_empty(demix_dir)
 
     for path in spec_paths:
