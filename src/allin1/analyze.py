@@ -118,25 +118,25 @@ def analyze(
 
   # Analyze the tracks that are not analyzed yet.
   if todo_paths:
-      # === NEW: support pre-demixed stems ===
-      if pre_demixed_dir is not None:
-          pre_demixed_dir = Path(pre_demixed_dir).resolve()
-          use_pre_demixed = True
-          print(f"Using pre-demixed stems from {pre_demixed_dir} (skipping Demucs separation)")
-      else:
-          use_pre_demixed = False
+    # === NEW: support pre-demixed stems ===
+    if pre_demixed_dir is not None:
+        pre_demixed_dir = Path(pre_demixed_dir).resolve()
+        use_pre_demixed = True
+        print(f"Using pre-demixed stems from {pre_demixed_dir} (skipping Demucs separation)")
+    else:
+        use_pre_demixed = False
 
-      if use_pre_demixed:
-          demix_paths = [
-              pre_demixed_dir / Path(p).stem
-              for p in todo_paths
-          ]
-      else:
-          # Run normal separation
-          demix_paths = demix(todo_paths, demix_dir, device)
+    if use_pre_demixed:
+        demix_paths = [
+            pre_demixed_dir / Path(p).stem
+            for p in todo_paths
+        ]
+    else:
+        # Run normal separation
+        demix_paths = demix(todo_paths, demix_dir, device)
 
-      # Extract spectrograms (this step uses the demix_paths, whether pre-made or newly separated)
-      spec_paths = extract_spectrograms(demix_paths, spec_dir, multiprocess)
+    # Extract spectrograms (this step uses the demix_paths, whether pre-made or newly separated)
+    spec_paths = extract_spectrograms(demix_paths, spec_dir, multiprocess)
 
     # Load the model.
     model = load_pretrained_model(
