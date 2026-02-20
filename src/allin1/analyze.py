@@ -128,7 +128,7 @@ def analyze(
 
       if use_pre_demixed:
           demix_paths = [
-              pre_demixed_dir / 'htdemucs' / Path(p).stem
+              pre_demixed_dir / Path(p).stem
               for p in todo_paths
           ]
       else:
