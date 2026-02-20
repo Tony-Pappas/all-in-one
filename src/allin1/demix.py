@@ -11,7 +11,7 @@ def demix(paths: List[Path], demix_dir: Path, device: Union[str, torch.device]):
   todos = []
   demix_paths = []
   for path in paths:
-    out_dir = demix_dir / 'htdemucs' / path.stem
+    out_dir = demix_dir / 'htdemucs_ft' / path.stem
     demix_paths.append(out_dir)
     if out_dir.is_dir():
       if (
@@ -31,7 +31,7 @@ def demix(paths: List[Path], demix_dir: Path, device: Union[str, torch.device]):
       [
         sys.executable, '-m', 'demucs.separate',
         '--out', demix_dir.as_posix(),
-        '--name', 'htdemucs',
+        '--name', 'htdemucs_ft',
         '--device', str(device),
         *[path.as_posix() for path in todos],
       ],
