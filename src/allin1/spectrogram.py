@@ -64,11 +64,23 @@ def _extract_spectrogram(args: Tuple[Path, Path, SequentialProcessor]):
   src, dst, processor = args
 
   dst.parent.mkdir(parents=True, exist_ok=True)
+  
+  # Detect extension: prefer .flac if present, else fall back to .wav
+  possible_exts = [".flac", ".wav"]
+  stem_files = {}
+  for stem_name in ['bass', 'drums', 'other', 'vocals']:
+      for ext in possible_exts:
+          candidate = src / f"{stem_name}{ext}"
+          if candidate.exists():
+              stem_files[stem_name] = candidate
+              break
+      else:
+          raise FileNotFoundError(f"No stem file found for '{stem_name}' in {src} (tried {possible_exts})")
 
-  sig_bass = Signal(src / 'bass.wav', num_channels=1)
-  sig_drums = Signal(src / 'drums.wav', num_channels=1)
-  sig_other = Signal(src / 'other.wav', num_channels=1)
-  sig_vocals = Signal(src / 'vocals.wav', num_channels=1)
+  sig_bass   = Signal(stem_files['bass'],   num_channels=1)
+  sig_drums  = Signal(stem_files['drums'],  num_channels=1)
+  sig_other  = Signal(stem_files['other'],  num_channels=1)
+  sig_vocals = Signal(stem_files['vocals'], num_channels=1)
 
   spec_bass = processor(sig_bass)
   spec_drums = processor(sig_drums)
