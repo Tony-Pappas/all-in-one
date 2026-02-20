@@ -77,10 +77,10 @@ def _extract_spectrogram(args: Tuple[Path, Path, SequentialProcessor]):
       else:
           raise FileNotFoundError(f"No stem file found for '{stem_name}' in {src} (tried {possible_exts})")
 
-  sig_bass   = Signal(stem_files['bass'],   num_channels=1)
-  sig_drums  = Signal(stem_files['drums'],  num_channels=1)
-  sig_other  = Signal(stem_files['other'],  num_channels=1)
-  sig_vocals = Signal(stem_files['vocals'], num_channels=1)
+  sig_bass   = Signal(str(stem_files['bass']),   num_channels=1)
+  sig_drums  = Signal(str(stem_files['drums']),  num_channels=1)
+  sig_other  = Signal(str(stem_files['other']),  num_channels=1)
+  sig_vocals = Signal(str(stem_files['vocals']), num_channels=1)
 
   spec_bass = processor(sig_bass)
   spec_drums = processor(sig_drums)
